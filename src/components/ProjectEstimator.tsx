@@ -10,6 +10,7 @@ interface Step {
 }
 
 export default function ProjectEstimator() {
+  const isStaticExport = process.env.NEXT_PUBLIC_STATIC_EXPORT === "true";
   const steps: Step[] = [
     { id: 1, title: "System Segment", description: "Choose the core technology solution" },
     { id: 2, title: "Scale & Volume", description: "Select the size of your platform" },
@@ -114,6 +115,20 @@ export default function ProjectEstimator() {
     const calculation = calculateEstimate();
 
     try {
+      if (isStaticExport) {
+        const selectedFeatures = [
+          `Scale: ${getScalePriceObj().label}`,
+          ...selectedAddons.map((id) => addons.find((addon) => addon.id === id)?.label || id),
+        ];
+        const subject = encodeURIComponent(`Wavnix project estimate: ${getSegmentPriceObj().label}`);
+        const body = encodeURIComponent(
+          `Name: ${clientName}\nEmail: ${clientEmail}\nProject: ${getSegmentPriceObj().label}\nEstimate: ${calculation.range}\nFeatures: ${selectedFeatures.join(", ")}\nTimeline: ${timeline}\nNotes: ${notes || "None"}`
+        );
+        window.location.assign(`mailto:hello@wavnix.com?subject=${subject}&body=${body}`);
+        setSubmitSuccess("Your email app has been opened with the estimate details.");
+        return;
+      }
+
       const response = await fetch("/api/estimate", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -444,7 +459,7 @@ export default function ProjectEstimator() {
                   disabled={isSubmitting}
                   className="inline-flex items-center gap-1.5 px-6 py-3 text-xs font-bold uppercase tracking-widest text-bg-primary bg-accent hover:bg-accent/90 rounded-lg shadow-neon-strong disabled:opacity-50"
                 >
-                  {isSubmitting ? "Persisting Estimate..." : "Submit Inquiry"}
+                  {isSubmitting ? "Preparing Inquiry..." : isStaticExport ? "Open Email Inquiry" : "Submit Inquiry"}
                   <Sparkles className="w-4 h-4" />
                 </button>
               )}

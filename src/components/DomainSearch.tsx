@@ -13,6 +13,49 @@ interface DomainResult {
   status: "available" | "unavailable";
 }
 
+const staticPrices: Record<string, { reg: string; renew: string }> = {
+  com: { reg: "$11.99", renew: "$14.99" },
+  net: { reg: "$12.99", renew: "$15.99" },
+  io: { reg: "$39.99", renew: "$44.99" },
+  ai: { reg: "$69.99", renew: "$74.99" },
+  tech: { reg: "$4.99", renew: "$19.99" },
+  org: { reg: "$13.99", renew: "$16.99" },
+  co: { reg: "$22.99", renew: "$27.99" },
+};
+
+const supportedTlds = Object.keys(staticPrices);
+
+function getStaticDomainResults(domainQuery: string) {
+  const cleanName = domainQuery.trim().toLowerCase().replace(/^(https?:\/\/)?(www\.)?/, "");
+  const parts = cleanName.split(".");
+  const label = parts[0].replace(/[^a-z0-9-]/g, "");
+  const requestedTld = parts.length > 1 ? parts.slice(1).join(".") : "com";
+  const chosenTld = supportedTlds.includes(requestedTld) ? requestedTld : "com";
+
+  if (!label) throw new Error("Invalid domain name format");
+
+  const takenWords = ["google", "facebook", "apple", "microsoft", "wavnix", "github", "amazon", "openai", "netflix", "test", "admin"];
+  const isTakenWord = takenWords.some((word) => label.includes(word));
+  const isShort = label.length <= 3;
+  const extensions = [chosenTld, ...supportedTlds.filter((ext) => ext !== chosenTld)].slice(0, 5);
+
+  return {
+    resolvedLabel: label,
+    results: extensions.map((tld): DomainResult => {
+      const available = !isTakenWord && !(isShort && tld === "com");
+      return {
+        domain: `${label}.${tld}`,
+        tld,
+        available,
+        price: available ? staticPrices[tld].reg : null,
+        renewPrice: available ? staticPrices[tld].renew : null,
+        isPremium: isShort && available,
+        status: available ? "available" : "unavailable",
+      };
+    }),
+  };
+}
+
 export default function DomainSearch() {
   const [query, setQuery] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -29,6 +72,13 @@ export default function DomainSearch() {
     setResults([]);
 
     try {
+      if (process.env.NEXT_PUBLIC_STATIC_EXPORT === "true") {
+        const data = getStaticDomainResults(query);
+        setResults(data.results);
+        setSearchedLabel(data.resolvedLabel);
+        return;
+      }
+
       const response = await fetch(`/api/domain?query=${encodeURIComponent(query)}`);
       const data = await response.json();
 
@@ -109,6 +159,11 @@ export default function DomainSearch() {
           <p className="text-xs text-text-muted mb-6 font-mono">
             SEARCH MULTIPLE EXTENSIONS AT ONCE (.COM, .NET, .IO, .AI, .TECH)
           </p>
+          {process.env.NEXT_PUBLIC_STATIC_EXPORT === "true" && (
+            <p className="text-[10px] text-text-muted mb-4">
+              Indicative availability only—final registration status is confirmed during checkout.
+            </p>
+          )}
 
           <form onSubmit={handleSearch} className="flex flex-col sm:flex-row gap-3">
             <div className="relative flex-grow">

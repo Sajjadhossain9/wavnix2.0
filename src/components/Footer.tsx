@@ -4,6 +4,7 @@ import { useState } from "react";
 import { ArrowUpRight, CheckCircle2, Mail, MapPin, Send, Loader2, MessageSquare, Globe, ExternalLink } from "lucide-react";
 
 export default function Footer() {
+  const isStaticExport = process.env.NEXT_PUBLIC_STATIC_EXPORT === "true";
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [company, setCompany] = useState("");
@@ -20,6 +21,16 @@ export default function Footer() {
     setSuccessMsg(null);
 
     try {
+      if (isStaticExport) {
+        const subject = encodeURIComponent(`New Wavnix inquiry from ${name}`);
+        const body = encodeURIComponent(
+          `Name: ${name}\nEmail: ${email}\nCompany: ${company || "Not provided"}\n\nProject details:\n${message}`
+        );
+        window.location.assign(`mailto:hello@wavnix.com?subject=${subject}&body=${body}`);
+        setSuccessMsg("Your email app has been opened with the inquiry details.");
+        return;
+      }
+
       const response = await fetch("/api/contact", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -197,7 +208,7 @@ export default function Footer() {
                 ) : (
                   <>
                     <Send className="w-3.5 h-3.5" />
-                    ESTABLISH SECURE LINK
+                    {isStaticExport ? "OPEN EMAIL INQUIRY" : "ESTABLISH SECURE LINK"}
                   </>
                 )}
               </button>
