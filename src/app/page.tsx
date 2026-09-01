@@ -1,5 +1,3 @@
-import { db } from "@/db";
-import { sql } from "drizzle-orm";
 import Navbar from "@/components/Navbar";
 import Hero from "@/components/Hero";
 import CapabilitiesStrip from "@/components/CapabilitiesStrip";
@@ -12,16 +10,7 @@ import DomainSearch from "@/components/DomainSearch";
 import StoryAndTeam from "@/components/StoryAndTeam";
 import Footer from "@/components/Footer";
 
-export const dynamic = "force-dynamic";
-
-export default async function HomePage() {
-  // Verify database connection on server render
-  try {
-    await db.execute(sql`SELECT 1`);
-  } catch (error) {
-    console.error("Database connection verification failed on home page render:", error);
-  }
-
+export default function HomePage() {
   return (
     <div className="relative min-h-screen text-text-main bg-bg-primary overflow-hidden selection:bg-accent selection:text-bg-primary">
       {/* Precision grid pattern layout as subtle baseline texture */}

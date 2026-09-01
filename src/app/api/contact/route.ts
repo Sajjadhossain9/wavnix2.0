@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { db } from "@/db";
+import { getDb } from "@/db";
 import { contactSubmissions } from "@/db/schema";
 
 export async function POST(request: Request) {
@@ -14,7 +14,7 @@ export async function POST(request: Request) {
       );
     }
 
-    const inserted = await db.insert(contactSubmissions).values({
+    const inserted = await getDb().insert(contactSubmissions).values({
       name,
       email,
       company: company || null,

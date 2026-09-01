@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { db } from "@/db";
+import { getDb } from "@/db";
 import { projectEstimations } from "@/db/schema";
 
 export async function POST(request: Request) {
@@ -14,7 +14,7 @@ export async function POST(request: Request) {
       );
     }
 
-    const inserted = await db.insert(projectEstimations).values({
+    const inserted = await getDb().insert(projectEstimations).values({
       name,
       email,
       projectType,
